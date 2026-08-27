@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chrona - Time Tracking</title>
+    <link rel="icon" type="image/png"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='40' fill='none' stroke='%2303DAC6' stroke-width='8'/><path d='M50 20 L50 50 L70 70' stroke='white' stroke-width='6' fill='none'/><circle cx='75' cy='75' r='12' fill='%2303DAC6'/><path d='M70 75 L73 78 L80 70' stroke='white' stroke-width='3' fill='none'/></svg>">
+    <style>
+        :root {
+            --primary: #6200EE;
+            --primary-variant: #3700B3;
+            --secondary: #03DAC6;
+            --background: #FAFAFA;
+            --surface: #FFFFFF;
+            --error: #B00020;
+            --on-primary: #FFFFFF;
+            --on-secondary: #000000;
+            --on-background: #212121;
+            --text-secondary: #757575;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: var(--background);
+            color: var(--on-background);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 450px;
+            padding: 20px;
+        }
+
+        .header {
+            background: var(--primary);
+            color: var(--on-primary);
+            padding: 40px 20px;
+            text-align: center;
+            border-radius: 0 0 20px 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .header-logo {
+            width: 50px;
+            height: 50px;
+        }
+
+        .top-bar {
+            background: var(--primary);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-radius: 0 0 12px 12px;
+            margin-bottom: 20px;
+        }
+
+        .top-bar h2 {
+            font-size: 1.2rem;
+        }
+
+        .card {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+            background: white;
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--on-primary);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-variant);
+            box-shadow: 0 4px 8px rgba(98, 0, 238, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: var(--on-secondary);
+        }
+
+        .btn-danger {
+            background: var(--error);
+            color: white;
+        }
+
+        .btn-block {
+            margin-top: 10px;
+        }
+
+        .action-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .status {
+            text-align: center;
+            padding: 20px;
+            font-size: 1.2rem;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+
+        .status.clocked-out {
+            background: #f5f5f5;
+            color: var(--text-secondary);
+        }
+
+        .status.clocked-in {
+            background: #E8F5E9;
+            color: #2E7D32;
+        }
+
+        .clock-btn {
+            padding: 30px;
+            font-size: 1.5rem;
+            margin: 20px 0;
+        }
+
+        .employee-list {
+            margin-top: 20px;
+        }
+
+        .employee-item {
+            padding: 12px;
+            background: #f5f5f5;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .view {
+            display: none;
+        }
+
+        .view.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 100;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background-color: var(--surface);
+            margin: 10% auto;
+            padding: 25px;
+            border-radius: 12px;
+            width: 85%;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .close-modal {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 20px;
+        }
+
+        .close-modal:hover {
+            color: var(--error);
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            min-width: 400px;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            color: var(--primary);
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .total-display {
+            margin-top: 15px;
+            font-weight: bold;
+            text-align: right;
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-row .form-group {
+            flex: 1;
+            margin-bottom: 15px;
+        }
+
+        /* About Section Styles */
+        .about-logo {
+            width: 150px;
+            height: auto;
+            margin: 20px auto;
+            display: block;
+        }
+
+        .about-text {
+            text-align: center;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin: 15px 0;
+        }
+
+        .about-features {
+            text-align: left;
+            margin: 20px 0;
+            padding-left: 20px;
+        }
+
+        .about-features li {
+            margin: 8px 0;
+            color: var(--on-background);
+        }
+
+        .footer-branding {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .footer-branding img {
+            width: 120px;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- LOGIN VIEW -->
+        <div id="loginView" class="view active">
+            <div class="header">
+                <h1>
+                    <svg class="header-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="50" cy="50" r="40" fill="none" stroke="#03DAC6" stroke-width="8" />
+                        <path d="M50 20 L50 50 L70 70" stroke="white" stroke-width="6" fill="none"
+                            stroke-linecap="round" />
+                        <circle cx="75" cy="75" r="12" fill="#03DAC6" />
+                        <path d="M70 75 L73 78 L80 70" stroke="white" stroke-width="3" fill="none"
+                            stroke-linecap="round" />
+                    </svg>
+                    Chrona
+                </h1>
+                <p>Time Tracking System</p>
+            </div>
+            <div class="card">
+                <div class="form-group">
+                    <label for="loginPin">Enter PIN</label>
+                    <input type="password" id="loginPin" placeholder="Enter your PIN" maxlength="10">
+                </div>
+                <button class="btn btn-primary" onclick="login()">Login</button>
+                <button id="setupBtn" class="btn btn-secondary btn-block" onclick="showSetup()"
+                    style="display:none;">Initial Setup</button>
+                <button class="btn btn-block" style="background:transparent; color:var(--primary); margin-top:15px;"
+                    onclick="showAbout()">ℹ️ About Chrona</button>
+            </div>
+        </div>
+
+        <!-- SETUP VIEW -->
+        <div id="setupView" class="view">
+            <div class="header">
+                <h1>
+                    <svg class="header-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="50" cy="50" r="40" fill="none" stroke="#03DAC6" stroke-width="8" />
+                        <path d="M50 20 L50 50 L70 70" stroke="white" stroke-width="6" fill="none"
+                            stroke-linecap="round" />
+                        <circle cx="75" cy="75" r="12" fill="#03DAC6" />
+                        <path d="M70 75 L73 78 L80 70" stroke="white" stroke-width="3" fill="none"
+                            stroke-linecap="round" />
+                    </svg>
+                    Setup
+                </h1>
+            </div>
+            <div class="card">
+                <div class="form-group"><label for="setupName">Admin Name</label><input type="text" id="setupName"
+                        placeholder="Enter your name"></div>
+                <div class="form-group"><label for="setupPin">Admin PIN (min 4 digits)</label><input type="password"
+                        id="setupPin" placeholder="Create PIN" maxlength="10"></div>
+                <button class="btn btn-primary" onclick="createAdmin()">Create Account</button>
+                <button class="btn btn-secondary btn-block" onclick="showLogin()">Cancel</button>
+            </div>
+        </div>
+
+        <!-- ADMIN VIEW -->
+        <div id="adminView" class="view">
+            <div class="top-bar">
+                <h2 id="adminTitle">Administrator</h2>
+                <button class="btn btn-danger" style="width:auto; padding:8px 16px;" onclick="logout()">Logout</button>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-bottom:15px;">Add Employee</h3>
+                <div class="form-group"><input type="text" id="empName" placeholder="Employee Name"></div>
+                <div class="form-group"><input type="password" id="empPin" placeholder="PIN (min 4 digits)"
+                        maxlength="10"></div>
+                <button class="btn btn-primary" onclick="addEmployee()">Add Employee</button>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-bottom:15px;">Manage Employees</h3>
+                <div id="employeeList" class="employee-list"></div>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-bottom:15px;">📊 Timesheet Reports</h3>
+                <div class="filter-row">
+                    <div class="form-group">
+                        <label for="filterEmployee">Employee</label>
+                        <select id="filterEmployee">
+                            <option value="all">All Employees</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="filterWeek">Time Period</label>
+                        <select id="filterWeek">
+                            <option value="all">All Time</option>
+                            <option value="current">Current Week</option>
+                            <option value="previous">Previous Week</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="applyFilters()">Apply Filters</button>
+
+                <div class="table-container">
+                    <table id="reportTable">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Employee</th>
+                                <th>In</th>
+                                <th>Out</th>
+                                <th>Hrs</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reportTableBody">
+                            <tr>
+                                <td colspan="5" style="text-align:center; color:var(--text-secondary); padding:20px;">
+                                    Click "Apply Filters" to view data</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p id="totalHoursDisplay" class="total-display"></p>
+                <button class="btn btn-secondary btn-block" onclick="exportFilteredCSV()">📥 Export Filtered
+                    Data</button>
+            </div>
+
+            <div class="footer-branding">
+                <p>Powered by</p>
+                <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 60'><text x='100' y='35' font-family='Arial' font-size='20' font-weight='bold' fill='%236200EE' text-anchor='middle'>PrinTech Solutions</text></svg>"
+                    alt="PrinTech Solutions">
+                <p style="margin-top:10px;">Developed by PrinTech Solutions<br>Georgetown, Guyana</p>
+            </div>
+        </div>
+
+        <!-- EMPLOYEE VIEW -->
+        <div id="employeeView" class="view">
+            <div class="header">
+                <h1>
+                    <svg class="header-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="50" cy="50" r="40" fill="none" stroke="#03DAC6" stroke-width="8" />
+                        <path d="M50 20 L50 50 L70 70" stroke="white" stroke-width="6" fill="none"
+                            stroke-linecap="round" />
+                        <circle cx="75" cy="75" r="12" fill="#03DAC6" />
+                        <path d="M70 75 L73 78 L80 70" stroke="white" stroke-width="3" fill="none"
+                            stroke-linecap="round" />
+                    </svg>
+                    <span id="empWelcome">Welcome</span>
+                </h1>
+            </div>
+            <div class="card">
+                <div id="statusDisplay" class="status clocked-out">Clocked Out</div>
+                <button id="clockBtn" class="btn btn-secondary clock-btn" onclick="toggleClock()">CLOCK IN</button>
+                <button class="btn btn-danger btn-block" onclick="logout()">Logout</button>
+            </div>
+            <div class="card">
+                <h3>Your Totals</h3>
+                <p style="margin:10px 0;"><strong>Today:</strong> <span id="todayHours">0.00</span> hrs</p>
+                <p style="margin:10px 0;"><strong>This Week:</strong> <span id="weekHours">0.00</span> hrs</p>
+            </div>
+            <div class="footer-branding">
+                <p>Powered by</p>
+                <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 60'><text x='100' y='35' font-family='Arial' font-size='20' font-weight='bold' fill='%236200EE' text-anchor='middle'>PrinTech Solutions</text></svg>"
+                    alt="PrinTech Solutions">
+            </div>
+        </div>
+    </div>
+
+    <!-- CHANGE PIN MODAL -->
+    <div id="changePinModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeChangePinModal()">&times;</span>
+            <h3 style="margin-bottom: 15px; color: var(--primary);">Change PIN</h3>
+            <p style="margin-bottom: 15px; color: var(--text-secondary);">Updating PIN for: <strong
+                    id="modalEmpName">Employee</strong></p>
+            <div class="form-group">
+                <label for="newPinInput">New PIN (min 4 digits)</label>
+                <input type="password" id="newPinInput" placeholder="Enter new PIN" maxlength="10">
+            </div>
+            <button class="btn btn-primary" onclick="saveNewPin()">Update PIN</button>
+        </div>
+    </div>
+
+    <!-- ABOUT MODAL -->
+    <div id="aboutModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeAboutModal()">&times;</span>
+            <div style="text-align:center;">
+                <svg width="80" height="80" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"
+                    style="margin:20px auto;">
+                    <circle cx="50" cy="50" r="40" fill="none" stroke="#03DAC6" stroke-width="8" />
+                    <path d="M50 20 L50 50 L70 70" stroke="white" stroke-width="6" fill="none" stroke-linecap="round" />
+                    <circle cx="75" cy="75" r="12" fill="#03DAC6" />
+                    <path d="M70 75 L73 78 L80 70" stroke="white" stroke-width="3" fill="none" stroke-linecap="round" />
+                </svg>
+                <h2 style="color:var(--primary); margin-bottom:10px;">Chrona</h2>
+                <p style="color:var(--text-secondary); font-size:0.9rem;">Version 1.0</p>
+            </div>
+
+            <p class="about-text">
+                Chrona is a lightweight time tracking application built with HTML5 by <strong>PrinTech
+                    Solutions</strong>.
+                Designed for simplicity and reliability, Chrona helps you log work sessions, monitor productivity, and
+                generate clear reports.
+            </p>
+
+            <h4 style="color:var(--primary); margin:20px 0 10px 0;">Key Features:</h4>
+            <ul class="about-features">
+                <li>✅ Start and stop timers with one click</li>
+                <li>✅ Track employee hours by week</li>
+                <li>✅ Export logs for easy reporting</li>
+                <li>✅ Secure PIN-based authentication</li>
+                <li>✅ Works offline - no internet required</li>
+            </ul>
+
+            <div style="text-align:center; margin-top:30px; padding-top:20px; border-top:2px solid #f0f0f0;">
+                <p style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:15px;">Developed by</p>
+                <img src="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 60'><text x='100' y='35' font-family='Arial' font-size='20' font-weight='bold' fill='%236200EE' text-anchor='middle'>PrinTech Solutions</text><text x='100' y='50' font-family='Arial' font-size='10' fill='%23757575' text-anchor='middle'>Georgetown, Guyana</text></svg>"
+                    alt="PrinTech Solutions" style="width:180px;">
+                <p style="color:var(--text-secondary); font-size:0.85rem; margin-top:15px;">🐍 Powered by Python & HTML5
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let db = { employees: [], timesheets: [], currentUser: null };
+        let editingEmpId = null;
+        let currentFilteredData = [];
+
+        function simpleHash(str) {
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                const char = str.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash = hash & hash;
+            }
+            return Math.abs(hash).toString(16);
+        }
+        function hashPin(pin) {
+            const salt = Math.floor(Math.random() * 900000) + 100000;
+            return salt + ':' + simpleHash(salt + pin);
+        }
+        function verifyPin(stored, provided) {
+            const [salt, hash] = stored.split(':');
+            return simpleHash(salt + provided) === hash;
+        }
+
+        function loadDB() {
+            const saved = localStorage.getItem('chronaDB');
+            if (saved) db = JSON.parse(saved);
+            updateUI();
+        }
+        function saveDB() { localStorage.setItem('chronaDB', JSON.stringify(db)); }
+
+        function showView(viewId) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(viewId).classList.add('active');
+        }
+        function showLogin() { showView('loginView'); }
+        function showSetup() { showView('setupView'); }
+
+        function showAdmin() {
+            document.getElementById('adminTitle').textContent = 'Administrator: ' + db.currentUser.name;
+            renderEmployeeList();
+            populateReportFilters();
+            showView('adminView');
+        }
+        function showEmployee() {
+            document.getElementById('empWelcome').textContent = db.currentUser.name;
+            updateEmployeeStatus();
+            showView('employeeView');
+        }
+
+        function login() {
+            const pin = document.getElementById('loginPin').value;
+            if (!pin) return alert('Please enter a PIN');
+            const employee = db.employees.find(e => verifyPin(e.pin, pin));
+            if (employee) {
+                db.currentUser = employee;
+                document.getElementById('loginPin').value = '';
+                saveDB();
+                employee.isAdmin ? showAdmin() : showEmployee();
+            } else { alert('Invalid PIN'); }
+        }
+        function createAdmin() {
+            const name = document.getElementById('setupName').value.trim();
+            const pin = document.getElementById('setupPin').value.trim();
+            if (!name || pin.length < 4) return alert('Name required, PIN must be at least 4 digits');
+            db.employees.push({ id: Date.now(), name: name, pin: hashPin(pin), isAdmin: true });
+            saveDB();
+            alert('Admin created! You can now login.');
+            showLogin();
+        }
+        function logout() { db.currentUser = null; saveDB(); showLogin(); }
+
+        function addEmployee() {
+            const name = document.getElementById('empName').value.trim();
+            const pin = document.getElementById('empPin').value.trim();
+            if (!name || pin.length < 4) return alert('Name required, PIN must be at least 4 digits');
+            db.employees.push({ id: Date.now(), name: name, pin: hashPin(pin), isAdmin: false });
+            saveDB();
+            document.getElementById('empName').value = '';
+            document.getElementById('empPin').value = '';
+            alert('Employee added!');
+            renderEmployeeList();
+            populateReportFilters();
+        }
+
+        function renderEmployeeList() {
+            const list = document.getElementById('employeeList');
+            list.innerHTML = '';
+            db.employees.forEach(emp => {
+                if (!emp.isAdmin) {
+                    const div = document.createElement('div');
+                    div.className = 'employee-item';
+                    div.innerHTML = `<span>${emp.name}</span><button class="action-btn" onclick="openChangePinModal(${emp.id})">Change PIN</button>`;
+                    list.appendChild(div);
+                }
+            });
+            if (list.children.length === 0) list.innerHTML = '<p style="color:var(--text-secondary); text-align:center;">No employees yet</p>';
+        }
+
+        function openChangePinModal(empId) {
+            editingEmpId = empId;
+            const emp = db.employees.find(e => e.id === empId);
+            document.getElementById('modalEmpName').textContent = emp.name;
+            document.getElementById('newPinInput').value = '';
+            document.getElementById('changePinModal').style.display = 'block';
+        }
+        function closeChangePinModal() {
+            document.getElementById('changePinModal').style.display = 'none';
+            editingEmpId = null;
+        }
+        function saveNewPin() {
+            const newPin = document.getElementById('newPinInput').value.trim();
+            if (newPin.length < 4) return alert('PIN must be at least 4 digits');
+            const emp = db.employees.find(e => e.id === editingEmpId);
+            if (emp) {
+                emp.pin = hashPin(newPin);
+                saveDB();
+                closeChangePinModal();
+                alert('PIN updated successfully for ' + emp.name + '!');
+            }
+        }
+
+        function populateReportFilters() {
+            const empSelect = document.getElementById('filterEmployee');
+            empSelect.innerHTML = '<option value="all">All Employees</option>';
+            db.employees.forEach(emp => {
+                if (!emp.isAdmin) {
+                    empSelect.innerHTML += `<option value="${emp.id}">${emp.name}</option>`;
+                }
+            });
+        }
+
+        function applyFilters() {
+            const empFilter = document.getElementById('filterEmployee').value;
+            const weekFilter = document.getElementById('filterWeek').value;
+            const tbody = document.getElementById('reportTableBody');
+            tbody.innerHTML = '';
+            currentFilteredData = [];
+            let totalHours = 0;
+
+            let startStr = null, endStr = null;
+            if (weekFilter !== 'all') {
+                const now = new Date();
+                const day = now.getDay() || 7;
+                if (day !== 1) now.setHours(-24 * (day - 1));
+                now.setHours(0, 0, 0, 0);
+                const startOfWeek = new Date(now);
+                const endOfWeek = new Date(startOfWeek);
+                endOfWeek.setDate(endOfWeek.getDate() + 6);
+
+                if (weekFilter === 'previous') {
+                    startOfWeek.setDate(startOfWeek.getDate() - 7);
+                    endOfWeek.setDate(endOfWeek.getDate() - 7);
+                }
+                startStr = startOfWeek.toISOString().split('T')[0];
+                endStr = endOfWeek.toISOString().split('T')[0];
+            }
+
+            db.timesheets.forEach(ts => {
+                if (empFilter !== 'all' && ts.empId != empFilter) return;
+                if (weekFilter !== 'all' && (ts.date < startStr || ts.date > endStr)) return;
+
+                currentFilteredData.push(ts);
+                if (ts.signOut) totalHours += ts.hours;
+
+                const emp = db.employees.find(e => e.id === ts.empId);
+                const empName = emp ? emp.name : 'Unknown';
+                const inTime = ts.signIn ? new Date(ts.signIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-';
+                const outTime = ts.signOut ? new Date(ts.signOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-';
+
+                tbody.innerHTML += `<tr><td>${ts.date}</td><td>${empName}</td><td>${inTime}</td><td>${outTime}</td><td>${ts.hours.toFixed(2)}</td></tr>`;
+            });
+
+            if (currentFilteredData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--text-secondary); padding:20px;">No records found for these filters</td></tr>';
+            }
+
+            document.getElementById('totalHoursDisplay').textContent = `Total Hours: ${totalHours.toFixed(2)}`;
+        }
+
+        function exportFilteredCSV() {
+            if (currentFilteredData.length === 0) return alert('No data to export. Apply filters first.');
+
+            let csv = 'Date,Employee,Sign In,Sign Out,Hours Worked\n';
+            currentFilteredData.forEach(ts => {
+                const emp = db.employees.find(e => e.id === ts.empId);
+                const name = emp ? emp.name : 'Unknown';
+                csv += `${ts.date},"${name}",${ts.signIn},${ts.signOut || ''},${ts.hours}\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `chrona_report_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+        }
+
+        function toggleClock() {
+            const btn = document.getElementById('clockBtn');
+            const status = document.getElementById('statusDisplay');
+            if (btn.textContent === 'CLOCK IN') {
+                const now = new Date();
+                db.timesheets.push({ id: Date.now(), empId: db.currentUser.id, date: now.toISOString().split('T')[0], signIn: now.toISOString(), signOut: null, hours: 0 });
+                saveDB();
+                btn.textContent = 'CLOCK OUT'; btn.classList.remove('btn-secondary'); btn.classList.add('btn-danger');
+                status.textContent = 'Clocked In at ' + now.toLocaleTimeString(); status.className = 'status clocked-in';
+            } else {
+                const activeSheet = db.timesheets.find(ts => ts.empId === db.currentUser.id && !ts.signOut);
+                if (activeSheet) {
+                    const now = new Date();
+                    activeSheet.signOut = now.toISOString();
+                    activeSheet.hours = Math.round(((now - new Date(activeSheet.signIn)) / (1000 * 60 * 60)) * 100) / 100;
+                    saveDB();
+                }
+                btn.textContent = 'CLOCK IN'; btn.classList.remove('btn-danger'); btn.classList.add('btn-secondary');
+                status.textContent = 'Clocked Out'; status.className = 'status clocked-out';
+                alert('Clocked Out Successfully!');
+            }
+            updateEmployeeStatus();
+        }
+
+        function updateEmployeeStatus() {
+            const activeSheet = db.timesheets.find(ts => ts.empId === db.currentUser.id && !ts.signOut);
+            const btn = document.getElementById('clockBtn');
+            const status = document.getElementById('statusDisplay');
+            if (activeSheet) {
+                btn.textContent = 'CLOCK OUT'; btn.classList.remove('btn-secondary'); btn.classList.add('btn-danger');
+                status.textContent = 'Clocked In at ' + new Date(activeSheet.signIn).toLocaleTimeString(); status.className = 'status clocked-in';
+            } else {
+                btn.textContent = 'CLOCK IN'; btn.classList.remove('btn-danger'); btn.classList.add('btn-secondary');
+                status.textContent = 'Clocked Out'; status.className = 'status clocked-out';
+            }
+            const today = new Date().toISOString().split('T')[0];
+            const weekStart = new Date(); weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+            let todayHours = 0, weekHours = 0;
+            db.timesheets.forEach(ts => {
+                if (ts.empId === db.currentUser.id && ts.signOut) {
+                    if (ts.date === today) todayHours += ts.hours;
+                    if (new Date(ts.date) >= weekStart) weekHours += ts.hours;
+                }
+            });
+            document.getElementById('todayHours').textContent = todayHours.toFixed(2);
+            document.getElementById('weekHours').textContent = weekHours.toFixed(2);
+        }
+
+        function updateUI() {
+            const setupBtn = document.getElementById('setupBtn');
+            if (setupBtn) setupBtn.style.display = db.employees.length === 0 ? 'block' : 'none';
+            if (db.currentUser) db.currentUser.isAdmin ? showAdmin() : showEmployee();
+        }
+
+        // About Modal Functions
+        function showAbout() {
+            document.getElementById('aboutModal').style.display = 'block';
+        }
+        function closeAboutModal() {
+            document.getElementById('aboutModal').style.display = 'none';
+        }
+
+        window.onload = loadDB;
+        document.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                if (document.getElementById('loginView').classList.contains('active')) login();
+                else if (document.getElementById('setupView').classList.contains('active')) createAdmin();
+            }
+        });
+        window.onclick = function (event) {
+            const changeModal = document.getElementById('changePinModal');
+            const aboutModal = document.getElementById('aboutModal');
+            if (event.target == changeModal) closeChangePinModal();
+            if (event.target == aboutModal) closeAboutModal();
+        }
+    </script>
+</body>
+
+</html>
